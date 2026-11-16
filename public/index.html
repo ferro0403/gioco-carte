@@ -9,17 +9,9 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="schermata">
-      <h1 class="titolo">L'Ultimo Eroe</h1>
-      <p class="sottotitolo">Solo uno uscirà vivo dalla torre.</p>
-
-      <div class="cartello">
-        <p id="stato" class="stato">Collegamento al server…</p>
-        <p id="collegati" class="collegati"></p>
-      </div>
-
-      <p class="nota">Milestone 1: struttura del progetto. Il gioco arriva presto!</p>
-    </main>
+    <!-- La pagina è vuota: la riempie client.js, una schermata alla volta. -->
+    <main id="app" class="schermata"></main>
+    <div id="avviso" class="avviso" role="status"></div>
 
     <!-- Questo file lo crea da solo il server Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>

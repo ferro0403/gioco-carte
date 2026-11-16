@@ -1,0 +1,9 @@
+# Istruzioni per Render (hosting). Piano GRATUITO: niente carta di credito.
+services:
+  - type: web
+    name: ultimo-eroe
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /salute

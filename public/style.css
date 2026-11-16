@@ -1,0 +1,82 @@
+/* I colori del gioco stanno qui in cima, come "variabili" riutilizzabili. */
+:root {
+  --sfondo: #1b1033;
+  --sfondo-chiaro: #2c1a52;
+  --testo: #fff7e6;
+  --contorno: #0d0718;
+  --vita: #ff4d5e;
+  --forza: #ff9a3c;
+  --agilita: #4fd67a;
+  --magia: #b06bff;
+  --oro: #ffd34d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--sfondo);
+  color: var(--testo);
+  font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  font-size: 18px;
+}
+
+.schermata {
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.titolo {
+  margin: 0;
+  font-size: 2.6rem;
+  line-height: 1.1;
+  color: var(--oro);
+  text-shadow: 3px 3px 0 var(--contorno);
+}
+
+.sottotitolo {
+  margin: 0;
+}
+
+.cartello {
+  width: 100%;
+  padding: 16px;
+  background: var(--sfondo-chiaro);
+  border: 4px solid var(--contorno);
+  border-radius: 24px;
+  box-shadow: 0 6px 0 var(--contorno);
+}
+
+.stato {
+  margin: 0;
+  font-weight: bold;
+}
+
+.stato.ok {
+  color: var(--agilita);
+}
+
+.stato.errore {
+  color: var(--vita);
+}
+
+.collegati {
+  margin: 8px 0 0;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Fa occupare alla pagina tutta la larghezza del telefono -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1b1033" />
+    <title>L'Ultimo Eroe</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="schermata">
+      <h1 class="titolo">L'Ultimo Eroe</h1>
+      <p class="sottotitolo">Solo uno uscirà vivo dalla torre.</p>
+
+      <div class="cartello">
+        <p id="stato" class="stato">Collegamento al server…</p>
+        <p id="collegati" class="collegati"></p>
+      </div>
+
+      <p class="nota">Milestone 1: struttura del progetto. Il gioco arriva presto!</p>
+    </main>
+
+    <!-- Questo file lo crea da solo il server Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="client.js"></script>
+  </body>
+</html>

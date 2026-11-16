@@ -324,6 +324,285 @@ button:focus-visible {
   clip-path: inset(50%);
 }
 
+/* ---- Partita ---- */
+
+.testata-partita {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.round {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--oro);
+  text-shadow: 2px 2px 0 var(--contorno);
+}
+
+.crollo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--testo-tenue);
+}
+
+.crollo.attivo {
+  color: var(--vita);
+  font-weight: bold;
+}
+
+.tavolo {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.posto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--sfondo-chiaro);
+  border: 3px solid var(--contorno);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.posto.mio {
+  border-color: var(--oro);
+}
+
+.posto.spettro {
+  opacity: 0.55;
+}
+
+.posto .pallino {
+  width: 34px;
+  height: 34px;
+}
+
+.vita,
+.benedetto {
+  flex: none;
+  padding: 2px 10px;
+  border: 3px solid var(--contorno);
+  border-radius: 999px;
+  color: var(--contorno);
+  font-weight: bold;
+}
+
+.vita {
+  min-width: 64px;
+  background: var(--vita);
+  text-align: center;
+}
+
+.benedetto {
+  background: var(--oro);
+  font-size: 0.8rem;
+}
+
+.timer {
+  position: relative;
+  height: 26px;
+  background: var(--sfondo-scuro);
+  border: 3px solid var(--contorno);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.timer-barra {
+  width: 100%;
+  height: 100%;
+  background: var(--oro);
+  transition: width 0.25s linear;
+}
+
+.timer-testo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--testo);
+  text-shadow: 1px 1px 0 var(--contorno), -1px -1px 0 var(--contorno);
+}
+
+.azioni {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.azioni .etichetta {
+  margin: 0;
+}
+
+.azioni .bottone-piccolo {
+  align-self: center;
+  background: var(--sfondo-scuro);
+}
+
+.bottone-forza {
+  background: var(--forza);
+}
+.bottone-agilita {
+  background: var(--agilita);
+}
+.bottone-magia {
+  background: var(--magia);
+}
+.bottone-vita {
+  background: var(--vita);
+}
+
+.scelta-fatta {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--oro);
+}
+
+.conteggio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.conteggio-numero {
+  margin: 0;
+  font-size: 9rem;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--oro);
+  text-shadow: 6px 6px 0 var(--contorno);
+}
+
+.lista-scelte,
+.lista-eventi {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.lista-scelte {
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.evento {
+  padding: 10px 12px;
+  background: var(--sfondo-chiaro);
+  border: 3px solid var(--contorno);
+  border-radius: 14px;
+  font-size: 0.95rem;
+}
+
+.evento.danno {
+  border-left: 8px solid var(--vita);
+}
+
+.evento.morte {
+  background: var(--contorno);
+  font-weight: bold;
+}
+
+.evento p {
+  margin: 0;
+}
+
+.evento-titolo {
+  margin-bottom: 6px !important;
+  font-weight: bold;
+}
+
+.riga-conto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 3px 0;
+  font-size: 0.85rem;
+}
+
+.chi {
+  min-width: 4.5em;
+  color: var(--testo-tenue);
+  overflow-wrap: anywhere;
+}
+
+.carta {
+  display: inline-block;
+  min-width: 1.7em;
+  padding: 1px 6px;
+  background: var(--testo);
+  color: var(--contorno);
+  border: 2px solid var(--contorno);
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.carta.speciale {
+  background: var(--oro);
+}
+
+.nota-evento {
+  margin-top: 4px !important;
+  font-size: 0.85rem;
+  color: var(--oro);
+}
+
+.esito {
+  margin-top: 6px !important;
+  font-weight: bold;
+}
+
+.esito.danno {
+  color: var(--vita);
+}
+
+.vittoria {
+  border-color: var(--oro);
+}
+
+.vincitore {
+  margin: 0 0 6px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--oro);
+  text-shadow: 3px 3px 0 var(--contorno);
+  overflow-wrap: anywhere;
+}
+
+.carte-uscite {
+  padding: 8px 12px;
+  background: var(--sfondo-scuro);
+  border: 3px solid var(--contorno);
+  border-radius: 14px;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.carte-uscite summary {
+  cursor: pointer;
+}
+
+.elenco-carte {
+  margin: 8px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* ---- Barra in fondo e avvisi ---- */
 
 .barra-fondo {

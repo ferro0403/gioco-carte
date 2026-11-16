@@ -23,11 +23,14 @@ export const CONFIG = {
   // --- Bot ---
   bot: {
     nomi: ['Sasso', 'Rugiada', 'Brodo', 'Ciuffo', 'Tegola', 'Fischio'],
+    probabilitaAttacco: 0.7, // un bot vivo attacca 7 volte su 10, altrimenti si difende
+    probabilitaPerseguita: 0.7, // un bot Spettro perseguita 7 volte su 10, altrimenti benedice
   },
 
   // --- Round ---
   round: {
     secondiScelta: 30, // tempo per la scelta segreta
+    secondiRisultati: 30, // tempo massimo per leggere i risultati prima del round dopo
     bonusDifenditi: 2, // "Difenditi": +2 alla difesa
     malusEsplora: 1, // "Esplora": -1 alla difesa
     roundAttesaAbilita: 1, // round di attesa dopo un'abilità attiva
@@ -86,6 +89,7 @@ export const CONFIG = {
   // "copie" = quante carte di quel tipo ci sono nel mazzo.
   // Totale: 4 + 6 + 5 + 3 numeri + 4 speciali = 22 carte.
   destino: {
+    valoreSpeciale: 0, // nelle somme, una carta speciale vale come questo numero
     numeri: [
       { valore: 0, copie: 4 },
       { valore: 1, copie: 6 },

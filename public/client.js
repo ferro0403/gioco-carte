@@ -11,6 +11,7 @@
 import { CONFIG } from '/game/config.js';
 import { riempiTesto } from '/game/testi.js';
 import { el } from './dom.js';
+import { schermataPartita } from './partita.js';
 
 // "io" arriva dallo script /socket.io/socket.io.js caricato in index.html.
 const socket = io();
@@ -27,6 +28,14 @@ const stato = {
   nome: leggi('nome') ?? '',
   codice: codiceDalLink.toUpperCase(),
   errore: '',
+
+  // ---- Durante la partita ----
+  partita: null, // la vista della partita, personale per questo telefono
+  bozza: null, // la scelta che stai ancora componendo
+  scadenza: null, // quando scade il timer, secondo l'orologio di questo telefono
+  durataTimer: 1, // quanto durava il timer quando è partito, in millisecondi
+  conteggio: null, // 3, 2, 1 prima della rivelazione (null = niente conteggio)
+  roundRivelato: 0, // l'ultimo round di cui abbiamo già mostrato i risultati
 };
 
 // ---- Memoria del telefono (resta anche se chiudi la pagina) ----
@@ -71,6 +80,7 @@ function entrato(risposta) {
 
 function uscito({ dimenticaChiave = true } = {}) {
   stato.stanza = null;
+  stato.partita = null;
   stato.mioId = null;
   if (dimenticaChiave) salva('chiave', null);
   history.replaceState(null, '', location.pathname);
@@ -98,8 +108,57 @@ socket.on('disconnect', () => {
 // Il server manda questo messaggio ogni volta che nella stanza cambia qualcosa.
 socket.on('stanza', (stanza) => {
   stato.stanza = stanza;
+  if (stanza.fase === 'lobby') stato.partita = null;
   disegna();
 });
+
+// Durante la partita il server manda questo messaggio a ogni cambiamento.
+socket.on('partita', (partita) => {
+  const prima = stato.partita;
+  stato.partita = partita;
+
+  // Il server dice quanti millisecondi mancano: li sommiamo al NOSTRO orologio.
+  stato.scadenza = partita.msRimanenti == null ? null : Date.now() + partita.msRimanenti;
+  const faseNuova = !prima || prima.fase !== partita.fase || prima.round !== partita.round;
+  if (faseNuova) stato.durataTimer = partita.msRimanenti || 1;
+
+  if (partita.fase === 'scelta') {
+    stato.roundRivelato = 0;
+    if (faseNuova) stato.bozza = null;
+  } else if (partita.ultimoRound.round !== stato.roundRivelato) {
+    // Risultati nuovi: prima il "3… 2… 1…", poi la rivelazione.
+    stato.roundRivelato = partita.ultimoRound.round;
+    avviaConteggio();
+  }
+
+  disegna();
+  if (faseNuova) window.scrollTo(0, 0);
+});
+
+let timerConteggio;
+function avviaConteggio() {
+  clearInterval(timerConteggio);
+  stato.conteggio = 3;
+  timerConteggio = setInterval(() => {
+    stato.conteggio--;
+    if (stato.conteggio === 0) {
+      stato.conteggio = null;
+      clearInterval(timerConteggio);
+    }
+    disegna();
+    window.scrollTo(0, 0);
+  }, 800);
+}
+
+// Quattro volte al secondo aggiorniamo solo il timer, senza ridisegnare tutto.
+setInterval(() => {
+  const testo = document.querySelector('#timer-testo');
+  if (!testo || !stato.scadenza) return;
+  const mancano = Math.max(0, stato.scadenza - Date.now());
+  testo.textContent = `${Math.ceil(mancano / 1000)} s`;
+  const barra = document.querySelector('#timer-barra');
+  if (barra) barra.style.width = `${Math.min(100, (mancano / stato.durataTimer) * 100)}%`;
+}, 250);
 
 socket.on('stanza-chiusa', () => {
   mostraAvviso('Sei uscito dalla stanza.');
@@ -155,7 +214,7 @@ function disegna() {
   let schermata;
   if (!stato.stanza) schermata = schermataIniziale();
   else if (stato.stanza.fase === 'lobby') schermata = schermataLobby();
-  else schermata = schermataPartita();
+  else schermata = schermataPartita(stato, { chiedi, disegna });
 
   if (!stato.collegato) {
     schermata.push(el('p', { class: 'striscia-errore' }, 'Collegamento perso, riprovo…'));
@@ -416,23 +475,6 @@ function cartaPersonaggio(personaggio, stanza, ioStesso) {
       riempiTesto(personaggio.debolezza.descrizione, personaggio.numeri),
     ),
   );
-}
-
-// Segnaposto: il gioco vero arriva con la milestone 3.
-function schermataPartita() {
-  const { stanza, mioId } = stato;
-
-  return [
-    el('h1', { class: 'titolo' }, 'Si sale sulla torre!'),
-    el('p', { class: 'sottotitolo' }, 'Qui inizierà la partita (milestone 3).'),
-    el(
-      'ul',
-      { class: 'lista-giocatori' },
-      stanza.giocatori.map((g) => rigaGiocatore(g, stanza, false)),
-    ),
-    stanza.idHost === mioId &&
-      el('button', { class: 'bottone', onclick: () => chiedi('torna-in-lobby') }, 'Torna alla lobby'),
-  ];
 }
 
 // Prima schermata. Se abbiamo una chiave aspettiamo la risposta a "rientra",

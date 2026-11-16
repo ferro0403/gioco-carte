@@ -16,7 +16,16 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
 
+import { scegliPerBot } from '../game/bot.js';
 import { CONFIG } from '../game/config.js';
+import {
+  creaPartita,
+  prossimoRound,
+  registraScelta,
+  risolviRound,
+  trovaInPartita,
+  vistaPartita,
+} from '../game/partita.js';
 import {
   aggiungiBot,
   aggiungiGiocatore,
@@ -79,6 +88,7 @@ export function creaApp() {
   function cancellaStanza(voce) {
     for (const timer of voce.timerUscita.values()) clearTimeout(timer);
     clearTimeout(voce.timerAbbandono);
+    clearTimeout(voce.timerPartita);
     for (const [chiave, dati] of chiavi) {
       if (dati.codice === voce.stanza.codice) chiavi.delete(chiave);
     }
@@ -111,6 +121,91 @@ export function creaApp() {
     }
   }
 
+  // ---- La partita: il server fa da "arbitro con il cronometro" ----
+
+  // Manda a OGNI telefono la sua vista personale della partita
+  // (ognuno vede la propria scelta, mai quelle degli altri).
+  function inviaPartita(voce) {
+    if (!voce.partita) return;
+    // Mandiamo "quanti millisecondi mancano" e non "a che ora scade":
+    // gli orologi dei telefoni possono essere sbagliati, i millisecondi no.
+    const msRimanenti = voce.scadenza ? Math.max(0, voce.scadenza - Date.now()) : null;
+    for (const [idGiocatore, idSocket] of voce.socketDi) {
+      io.to(idSocket).emit('partita', {
+        ...vistaPartita(voce.partita, idGiocatore),
+        msRimanenti,
+        pronti: [...voce.pronti],
+      });
+    }
+  }
+
+  // Fa partire un conto alla rovescia, alla fine del quale succede "poi".
+  function impostaTimer(voce, secondi, poi) {
+    clearTimeout(voce.timerPartita);
+    voce.scadenza = Date.now() + secondi * 1000;
+    voce.timerPartita = setTimeout(() => poi(voce), secondi * 1000);
+    voce.timerPartita.unref();
+  }
+
+  function fermaTimer(voce) {
+    clearTimeout(voce.timerPartita);
+    voce.scadenza = null;
+  }
+
+  function sceltaDelBot(voce, idGiocatore) {
+    const scelta = scegliPerBot(voce.partita, idGiocatore);
+    if (scelta) registraScelta(voce.partita, idGiocatore, scelta);
+  }
+
+  // Inizia la fase delle scelte segrete: i bot scelgono subito, gli umani hanno il timer.
+  function avviaRound(voce) {
+    voce.pronti = new Set();
+    for (const giocatore of voce.partita.giocatori) {
+      if (giocatore.bot) sceltaDelBot(voce, giocatore.id);
+    }
+    impostaTimer(voce, CONFIG.round.secondiScelta, chiudiRound);
+    inviaPartita(voce);
+  }
+
+  // Gli umani collegati: sono loro che il gioco deve aspettare.
+  function umaniCollegati(voce) {
+    return voce.partita.giocatori.filter((g) => !g.bot && voce.socketDi.has(g.id));
+  }
+
+  // Finite le scelte (o scaduto il tempo) il round si risolve.
+  function chiudiRound(voce) {
+    risolviRound(voce.partita);
+    if (voce.partita.fase === 'finita') fermaTimer(voce);
+    else impostaTimer(voce, CONFIG.round.secondiRisultati, roundSuccessivo);
+    inviaPartita(voce);
+  }
+
+  function roundSuccessivo(voce) {
+    prossimoRound(voce.partita);
+    avviaRound(voce);
+  }
+
+  // Se nessuno deve più fare niente, non serve aspettare il timer.
+  function controllaAvanzamento(voce) {
+    const { partita } = voce;
+    if (!partita) return;
+    const umani = umaniCollegati(voce);
+    if (umani.length === 0) return; // nessuno collegato: ci pensa il timer
+    if (partita.fase === 'scelta' && umani.every((g) => g.id in partita.scelte)) {
+      chiudiRound(voce);
+    } else if (partita.fase === 'risultati' && umani.every((g) => voce.pronti.has(g.id))) {
+      roundSuccessivo(voce);
+    }
+  }
+
+  // Chi abbandona a partita iniziata viene sostituito da un bot.
+  function sostituisciConBot(voce, idGiocatore) {
+    const giocatore = voce.partita && trovaInPartita(voce.partita, idGiocatore);
+    if (!giocatore) return;
+    giocatore.bot = true;
+    if (voce.partita.fase === 'scelta') sceltaDelBot(voce, idGiocatore);
+  }
+
   // Toglie davvero un umano dalla stanza.
   function espelli(voce, idGiocatore) {
     clearTimeout(voce.timerUscita.get(idGiocatore));
@@ -118,8 +213,25 @@ export function creaApp() {
     voce.socketDi.delete(idGiocatore);
     dimenticaChiave(voce, idGiocatore);
     rimuoviGiocatore(voce.stanza, idGiocatore);
+    sostituisciConBot(voce, idGiocatore);
     aggiorna(voce);
     controllaAbbandono(voce);
+    // La stanza potrebbe essere appena stata cancellata: controlliamo prima di proseguire.
+    if (stanze.has(voce.stanza.codice)) {
+      controllaAvanzamento(voce);
+      inviaPartita(voce);
+    }
+  }
+
+  // Nella lobby, chi è scollegato ha un po' di tempo per rientrare: poi il posto si libera.
+  function avviaTimerUscita(voce, idGiocatore) {
+    clearTimeout(voce.timerUscita.get(idGiocatore));
+    const timer = setTimeout(
+      () => espelli(voce, idGiocatore),
+      CONFIG.stanza.secondiPrimaDiRimuovere * 1000,
+    );
+    timer.unref();
+    voce.timerUscita.set(idGiocatore, timer);
   }
 
   // Collega un socket (un telefono) a un giocatore della stanza.
@@ -141,6 +253,7 @@ export function creaApp() {
     impostaCollegato(voce.stanza, idGiocatore, true);
     aggiorna(voce);
     controllaAbbandono(voce);
+    inviaPartita(voce); // se c'è una partita in corso, chi rientra la ritrova
   }
 
   // Stacca il socket dal suo giocatore, senza toglierlo dalla stanza.
@@ -217,6 +330,10 @@ export function creaApp() {
         socketDi: new Map(), // idGiocatore -> id del socket collegato
         timerUscita: new Map(), // idGiocatore -> conto alla rovescia per toglierlo
         timerAbbandono: null,
+        partita: null, // la partita in corso (null finché si è nella lobby)
+        timerPartita: null, // il conto alla rovescia del round
+        scadenza: null, // quando scade, in millisecondi
+        pronti: new Set(), // chi ha premuto "Avanti" dopo i risultati
       };
       const risultato = entra(socket, voce, nome);
       // La stanza viene salvata solo se chi la crea è entrato davvero.
@@ -251,12 +368,55 @@ export function creaApp() {
     ascoltaInStanza('rimuovi-bot', (stanza, idGiocatore, { idBot }) =>
       rimuoviBot(stanza, idGiocatore, idBot),
     );
-    ascoltaInStanza('inizia-partita', (stanza, idGiocatore) =>
-      iniziaPartita(stanza, idGiocatore),
-    );
-    ascoltaInStanza('torna-in-lobby', (stanza, idGiocatore) =>
-      tornaInLobby(stanza, idGiocatore),
-    );
+
+    // Come "ascolta", ma passa al gestore tutta la "voce" (stanza + partita).
+    function ascoltaInPartita(evento, gestore) {
+      ascolta(evento, (dati) => {
+        const voce = stanze.get(socket.data.codice);
+        if (!voce) return { ok: false, errore: 'Non sei in una stanza.' };
+        return gestore(voce, socket.data.idGiocatore, dati);
+      });
+    }
+
+    ascoltaInPartita('inizia-partita', (voce, idGiocatore) => {
+      const risultato = iniziaPartita(voce.stanza, idGiocatore);
+      if (!risultato.ok) return risultato;
+      voce.partita = creaPartita(voce.stanza.giocatori);
+      aggiorna(voce);
+      avviaRound(voce);
+      return { ok: true };
+    });
+
+    ascoltaInPartita('torna-in-lobby', (voce, idGiocatore) => {
+      const risultato = tornaInLobby(voce.stanza, idGiocatore);
+      if (!risultato.ok) return risultato;
+      fermaTimer(voce);
+      voce.partita = null;
+      for (const giocatore of voce.stanza.giocatori) {
+        if (!giocatore.bot && !giocatore.collegato) avviaTimerUscita(voce, giocatore.id);
+      }
+      aggiorna(voce);
+      return { ok: true };
+    });
+
+    // La scelta segreta del round. Il server la tiene per sé fino alla rivelazione.
+    ascoltaInPartita('scegli-azione', (voce, idGiocatore, { scelta }) => {
+      if (!voce.partita) return { ok: false, errore: 'La partita non è iniziata.' };
+      const risultato = registraScelta(voce.partita, idGiocatore, scelta);
+      if (!risultato.ok) return risultato;
+      inviaPartita(voce); // gli altri vedono solo che "ha scelto"
+      controllaAvanzamento(voce);
+      return { ok: true };
+    });
+
+    // "Ho letto i risultati, andiamo avanti."
+    ascoltaInPartita('avanti', (voce, idGiocatore) => {
+      if (voce.partita?.fase !== 'risultati') return { ok: false, errore: 'Non ora.' };
+      voce.pronti.add(idGiocatore);
+      inviaPartita(voce);
+      controllaAvanzamento(voce);
+      return { ok: true };
+    });
 
     // Uscita volontaria: si lascia subito il posto.
     ascolta('esci', () => {
@@ -273,16 +433,11 @@ export function creaApp() {
       if (!staccato) return;
       const { voce, idGiocatore } = staccato;
 
-      if (voce.stanza.fase === 'lobby') {
-        const timer = setTimeout(
-          () => espelli(voce, idGiocatore),
-          CONFIG.stanza.secondiPrimaDiRimuovere * 1000,
-        );
-        timer.unref();
-        voce.timerUscita.set(idGiocatore, timer);
-      }
+      if (voce.stanza.fase === 'lobby') avviaTimerUscita(voce, idGiocatore);
       aggiorna(voce);
       controllaAbbandono(voce);
+      // Chi si è scollegato non blocca gli altri.
+      if (stanze.has(voce.stanza.codice)) controllaAvanzamento(voce);
     });
   });
 

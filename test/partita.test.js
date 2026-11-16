@@ -204,10 +204,10 @@ test('un attacco riuscito toglie Vita e finisce nel racconto del round', () => {
 test('si può attaccare con la Magia', () => {
   const partita = nuovaPartita();
   registraScelta(partita, 'g3', attacca('g1', 'magia')); // Zolfo (Magia 5) contro Brunna (Agilità 1)
-  prossimeCarte(partita, numero(0), numero(0));
+  prossimeCarte(partita, numero(1), numero(0)); // 6 contro 1
 
   risolviRound(partita);
-  assert.equal(vita(partita, 'g1'), 12 - 5);
+  assert.equal(vita(partita, 'g1'), 12 - 6);
 });
 
 test('Difenditi dà il bonus alla difesa', () => {

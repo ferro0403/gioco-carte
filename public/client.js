@@ -216,6 +216,9 @@ function disegna() {
   else if (stato.stanza.fase === 'lobby') schermata = schermataLobby();
   else schermata = schermataPartita(stato, { chiedi, disegna });
 
+  // Di notte lo schermo si scurisce (vedi "body.notte" in style.css).
+  document.body.classList.toggle('notte', Boolean(stato.stanza && stato.partita?.notte));
+
   if (!stato.collegato) {
     schermata.push(el('p', { class: 'striscia-errore' }, 'Collegamento perso, riprovo…'));
   }

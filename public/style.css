@@ -370,6 +370,16 @@ button:focus-visible {
   text-align: left;
 }
 
+/* Se le etichette non ci stanno su una riga, vanno a capo sotto il nome. */
+.posto {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.posto .giocatore-testo {
+  min-width: 55%;
+}
+
 .posto.mio {
   border-color: var(--oro);
 }
@@ -601,6 +611,85 @@ button:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* ---- Notte, Taglia, Oggetti ---- */
+
+body {
+  transition: background 1s;
+}
+
+/* Di notte tutto diventa più scuro e bluastro. */
+body.notte {
+  --sfondo: #05040f;
+  --sfondo-chiaro: #14122e;
+  --sfondo-scuro: #020208;
+  --oro: #9db4ff;
+}
+
+.avviso-notte {
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--contorno);
+  border: 2px solid var(--oro);
+  border-radius: 10px;
+  color: var(--oro);
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.etichetta-taglia,
+.zaino {
+  flex: none;
+  padding: 2px 8px;
+  border: 3px solid var(--contorno);
+  border-radius: 999px;
+  color: var(--contorno);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.etichetta-taglia {
+  background: #ffd34d;
+}
+
+.zaino {
+  background: var(--testo-tenue);
+}
+
+.oggetto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background: var(--sfondo-scuro);
+  border: 3px solid var(--contorno);
+  border-radius: 14px;
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.oggetto.scelto {
+  border-color: var(--oro);
+}
+
+.oggetto:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.info-segreta {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--sfondo-scuro);
+  border: 3px dashed var(--oro);
+  border-radius: 14px;
+  font-size: 0.9rem;
+}
+
+.evento.patto {
+  border-left: 8px solid var(--oro);
 }
 
 /* ---- Barra in fondo e avvisi ---- */

@@ -68,6 +68,31 @@ Le regole stanno in `game/partita.js`, nella funzione `risolviScontro`. In ordin
 
 Tutti i danni del round si applicano nello stesso momento, poi arriva il crollo della Torre.
 
+## L'ordine di un round
+
+`risolviRound` in `game/partita.js` fa sempre le cose in quest'ordine:
+
+1. Oggetti usati (prima si consumano tutti, poi fanno effetto)
+2. Patti: nascono se due giocatori se lo propongono a vicenda
+3. Abilità attive (Scudo, Infuso, Mano truccata)
+4. Esplorazioni
+5. Benedizioni degli Spettri
+6. Tutti gli attacchi, in ordine di tavolo (compresa la Fiamma di Zolfo)
+7. Spettri che perseguitano
+8. I danni si applicano tutti insieme; chi arriva a 0 diventa Spettro
+9. Chi ha eliminato il giocatore con la Taglia incassa la ricompensa
+10. Crollo della Torre
+11. Controllo della vittoria
+12. La Taglia va a chi ha più Vita
+
+Alcune precisazioni:
+
+- La Vita curata non supera mai il massimo; la ricompensa della Taglia invece sì.
+- La Taglia la incassa chi ha fatto più danni al ricercato nel round in cui muore.
+- La Fiamma di Zolfo colpisce anche l'alleato, ma non conta come Pugnalata.
+- Di notte ognuno vede solo ciò che lo riguarda, senza sapere chi è stato. Restano
+  visibili a tutti morti, patti, tradimenti e Taglia.
+
 ## Tecnologie
 
 - **Node.js + Express**: il server.
@@ -87,6 +112,6 @@ Tutti i danni del round si applicano nello stesso momento, poi arriva il crollo 
 1. ✅ Tecnologie, hosting e struttura del progetto
 2. ✅ Stanza con codice, lobby, scelta dei personaggi, bot
 3. ✅ Il cuore del gioco: round, attacchi, Destino, crollo della Torre, Spettri, vittoria
-4. Alleanze, tradimenti, Taglia, Notte, abilità, Oggetti
+4. ✅ Alleanze, tradimenti, Taglia, Notte, abilità, Oggetti
 5. Eventi, Mercante, Patti oscuri
 6. Grafica cartoon e animazioni

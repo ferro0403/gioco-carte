@@ -27,7 +27,8 @@ export function el(tag, proprieta = {}, ...figli) {
     }
   }
 
-  for (const figlio of figli.flat()) {
+  // flat(Infinity) "apre" le liste dentro altre liste, a qualunque profondità.
+  for (const figlio of figli.flat(Infinity)) {
     if (figlio === false || figlio == null) continue;
     elemento.append(figlio); // le stringhe diventano testo semplice
   }

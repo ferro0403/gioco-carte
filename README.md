@@ -36,12 +36,24 @@ Altri comandi:
 | `game/` | Le **regole** del gioco: logica pura, senza server né schermo |
 | `game/config.js` | **Tutti i numeri** del gioco (Vita, danni, round…): si bilancia da qui |
 | `server/` | Il server: stanze, giocatori, messaggi in tempo reale |
+| `render.yaml` | Le istruzioni per pubblicare il gioco su Render |
 | `public/` | L'interfaccia che vedono i telefoni (HTML, CSS, JavaScript) |
 | `test/` | I test delle regole |
 
 Regola d'oro: `game/` non sa niente di server e schermo. Il server usa le regole,
 l'interfaccia mostra quello che il server le manda. Così nessuno può barare e le
 regole si possono provare con i test.
+
+## Pubblicarlo su Render (gratis, senza carta)
+
+1. Crea un account su <https://render.com> entrando con GitHub.
+2. Scegli **New → Blueprint** e seleziona questo repository.
+3. Render legge `render.yaml` e propone il servizio `ultimo-eroe` con piano **Free**: conferma.
+4. Dopo qualche minuto il gioco è online a un indirizzo tipo `https://ultimo-eroe.onrender.com`.
+
+Da quel momento ogni merge su `main` viene pubblicato da solo. Con il piano gratuito il
+server si addormenta dopo circa 15 minuti senza visite: il primo che apre il link aspetta
+fino a un minuto.
 
 ## Tecnologie
 
@@ -60,7 +72,7 @@ regole si possono provare con i test.
 ## Milestone
 
 1. ✅ Tecnologie, hosting e struttura del progetto
-2. Stanza con codice, lobby, scelta dei personaggi, bot
+2. ✅ Stanza con codice, lobby, scelta dei personaggi, bot
 3. Il cuore del gioco: round, attacchi, Destino, crollo della Torre, Spettri, vittoria
 4. Alleanze, tradimenti, Taglia, Notte, abilità, Oggetti
 5. Eventi, Mercante, Patti oscuri

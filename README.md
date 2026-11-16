@@ -55,6 +55,19 @@ Da quel momento ogni merge su `main` viene pubblicato da solo. Con il piano grat
 server si addormenta dopo circa 15 minuti senza visite: il primo che apre il link aspetta
 fino a un minuto.
 
+## Come si risolve uno scontro
+
+Le regole stanno in `game/partita.js`, nella funzione `risolviScontro`. In ordine:
+
+1. Attaccante: Forza o Magia + carta Destino + bonus. Difensore: Agilità + carta Destino + bonus.
+   Una carta speciale nelle somme vale 0.
+2. **Ribaltone**: i due totali si scambiano.
+3. **Colpo del Fato** e **Sventura** decidono chi vince, qualunque sia il totale.
+4. Se vince l'attaccante, danno = differenza + 1 (mai meno di 1). In pareggio non succede niente.
+5. **Specchio**, solo se pescato da chi si difende: il danno torna a chi attacca.
+
+Tutti i danni del round si applicano nello stesso momento, poi arriva il crollo della Torre.
+
 ## Tecnologie
 
 - **Node.js + Express**: il server.
@@ -73,7 +86,7 @@ fino a un minuto.
 
 1. ✅ Tecnologie, hosting e struttura del progetto
 2. ✅ Stanza con codice, lobby, scelta dei personaggi, bot
-3. Il cuore del gioco: round, attacchi, Destino, crollo della Torre, Spettri, vittoria
+3. ✅ Il cuore del gioco: round, attacchi, Destino, crollo della Torre, Spettri, vittoria
 4. Alleanze, tradimenti, Taglia, Notte, abilità, Oggetti
 5. Eventi, Mercante, Patti oscuri
 6. Grafica cartoon e animazioni

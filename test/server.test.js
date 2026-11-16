@@ -123,3 +123,91 @@ test('quando l\'ultimo umano esce, la stanza sparisce', async () => {
   await chiedi(anna, 'esci');
   assert.equal(server.stanze.has(creata.stanza.codice), false);
 });
+
+// Aspetta il prossimo aggiornamento della partita che soddisfa la condizione.
+function attendiPartita(telefono, condizione) {
+  return new Promise((fatto) => {
+    const ascolta = (partita) => {
+      if (!condizione(partita)) return;
+      telefono.off('partita', ascolta);
+      fatto(partita);
+    };
+    telefono.on('partita', ascolta);
+  });
+}
+
+test('una partita intera contro i bot arriva fino al vincitore', async () => {
+  const anna = nuovoTelefono();
+  await chiedi(anna, 'crea-stanza', { nome: 'Anna' });
+  await chiedi(anna, 'aggiungi-bot');
+  await chiedi(anna, 'aggiungi-bot');
+  await chiedi(anna, 'scegli-personaggio', { idPersonaggio: 'brunna' });
+
+  let partita;
+  anna.on('partita', (vista) => {
+    partita = vista;
+  });
+  const iniziata = attendiPartita(anna, (p) => p.fase === 'scelta');
+  assert.equal((await chiedi(anna, 'inizia-partita')).ok, true);
+  await iniziata;
+
+  assert.equal(partita.round, 1);
+  assert.equal(partita.giocatori.length, 3);
+  // I bot hanno già scelto, ma Anna non può sapere cosa.
+  assert.equal(partita.giocatori.filter((g) => g.haScelto).length, 2);
+  assert.equal(partita.miaScelta, null);
+  assert.equal(partita.mazzo, undefined);
+  assert.equal(partita.scelte, undefined);
+
+  // Anna si difende sempre (da Spettro: benedice). Prima o poi qualcuno vince.
+  while (partita.fase !== 'finita') {
+    assert.ok(partita.round < 60, 'la partita non finisce mai');
+    const round = partita.round;
+    const io = partita.giocatori.find((g) => !g.bot);
+    const unVivo = partita.giocatori.find((g) => g.vivo && g.bot);
+    const scelta = io.vivo ? { tipo: 'difenditi' } : { tipo: 'benedici', bersaglio: unVivo.id };
+
+    // Appena l'unico umano ha scelto, il round si risolve senza aspettare il timer.
+    const risolto = attendiPartita(anna, (p) => p.fase !== 'scelta');
+    assert.equal((await chiedi(anna, 'scegli-azione', { scelta })).ok, true);
+    await risolto;
+    assert.equal(partita.ultimoRound.round, round);
+
+    if (partita.fase === 'risultati') {
+      const nuovoRound = attendiPartita(anna, (p) => p.fase === 'scelta');
+      assert.equal((await chiedi(anna, 'avanti')).ok, true);
+      await nuovoRound;
+      assert.equal(partita.round, round + 1);
+    }
+  }
+
+  assert.ok(partita.vincitori.length >= 1);
+  // A partita finita non si sceglie più.
+  assert.equal((await chiedi(anna, 'scegli-azione', { scelta: { tipo: 'difenditi' } })).ok, false);
+
+  // L'host riporta tutti nella lobby.
+  const inLobby = attendiStanza(anna, (s) => s.fase === 'lobby');
+  assert.equal((await chiedi(anna, 'torna-in-lobby')).ok, true);
+  await inLobby;
+});
+
+test('le azioni non valide in partita vengono rifiutate dal server', async () => {
+  const anna = nuovoTelefono();
+  await chiedi(anna, 'crea-stanza', { nome: 'Anna' });
+  assert.equal((await chiedi(anna, 'scegli-azione', { scelta: { tipo: 'difenditi' } })).ok, false);
+
+  await chiedi(anna, 'aggiungi-bot');
+  await chiedi(anna, 'aggiungi-bot');
+  await chiedi(anna, 'scegli-personaggio', { idPersonaggio: 'vesper' });
+  const iniziata = attendiPartita(anna, (p) => p.fase === 'scelta');
+  await chiedi(anna, 'inizia-partita');
+  const partita = await iniziata;
+  const io = partita.giocatori.find((g) => !g.bot);
+
+  const prova = (scelta) => chiedi(anna, 'scegli-azione', { scelta });
+  assert.equal((await prova({ tipo: 'attacca', bersaglio: io.id, con: 'forza' })).ok, false);
+  assert.equal((await prova({ tipo: 'attacca', bersaglio: 'nessuno', con: 'forza' })).ok, false);
+  assert.equal((await prova({ tipo: 'benedici', bersaglio: partita.giocatori[1].id })).ok, false);
+  assert.equal((await prova('difenditi')).ok, false);
+  assert.equal((await chiedi(anna, 'avanti')).ok, false); // non siamo ai risultati
+});

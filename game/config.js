@@ -25,6 +25,10 @@ export const CONFIG = {
     nomi: ['Sasso', 'Rugiada', 'Brodo', 'Ciuffo', 'Tegola', 'Fischio'],
     probabilitaAttacco: 0.7, // un bot vivo attacca 7 volte su 10, altrimenti si difende
     probabilitaPerseguita: 0.7, // un bot Spettro perseguita 7 volte su 10, altrimenti benedice
+    probabilitaEsplora: 0.25, // se ha posto per un Oggetto
+    probabilitaAbilita: 0.3, // se la sua abilità attiva è pronta
+    probabilitaPatto: 0.15, // se può allearsi
+    probabilitaOggetto: 0.5, // se ha un Oggetto che può usare
   },
 
   // --- Round ---
@@ -76,8 +80,23 @@ export const CONFIG = {
   },
 
   // --- Oggetti ---
+  // Esplorando si pesca un oggetto a caso da questa lista.
+  // "peso" = quanto è facile trovarlo (2 = il doppio delle volte rispetto a 1).
   oggetti: {
     massimoATesta: 2,
+    lista: [
+      { id: 'pozione', nome: 'Pozione', peso: 1, descrizione: '+{cura} Vita.', numeri: { cura: 3 } },
+      { id: 'pugnale', nome: 'Pugnale', peso: 1, descrizione: '+{bonus} al tuo attacco di questo round.', numeri: { bonus: 2 } },
+      { id: 'mantello', nome: 'Mantello', peso: 1, descrizione: '+{bonus} alla difesa per questo round.', numeri: { bonus: 2 } },
+      { id: 'pergamena', nome: 'Pergamena del Fato', peso: 1, descrizione: 'Guardi le prime {carte} carte del Destino.', numeri: { carte: 3 } },
+      { id: 'bomba', nome: 'Bomba', peso: 1, descrizione: '{danno} danno a tutti gli altri.', numeri: { danno: 1 } },
+      { id: 'amuleto', nome: 'Amuleto', peso: 1, descrizione: 'Annulla una Sventura. Si usa da solo.', numeri: {} },
+      { id: 'fumogeno', nome: 'Fumogeno', peso: 1, descrizione: 'Annulla il primo attacco contro di te in questo round.', numeri: {} },
+      { id: 'trappola', nome: 'Trappola', peso: 1, descrizione: 'Il primo che ti attacca in questo round subisce {danno} danni.', numeri: { danno: 2 } },
+      { id: 'rampino', nome: 'Rampino', peso: 1, descrizione: 'Rubi un Oggetto a caso a un giocatore.', numeri: {} },
+      { id: 'fiala', nome: 'Fiala del Fato', peso: 1, descrizione: 'Al tuo prossimo tiro di questo round peschi 2 carte Destino e tieni la migliore.', numeri: {} },
+      { id: 'campanella', nome: 'Campanella degli Spiriti', peso: 1, descrizione: 'Uno Spettro a tua scelta deve benedirti.', numeri: {} },
+    ],
   },
 
   // --- Eventi ---
